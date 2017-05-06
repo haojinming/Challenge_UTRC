@@ -1,7 +1,7 @@
 # Challenge_UTRC
 This a challenge from UTRC, which is a social network problem.
 
-The method is solve the mininum distance is:
+The method to solve the mininum distance of two peoples is:
 1. Traverse all lines in the file and build a map between people and number.
 2. Build a map of direct friend, this is a multimap.
 3. Use graph BFS algorithm to traverse all members until the destination is found. 

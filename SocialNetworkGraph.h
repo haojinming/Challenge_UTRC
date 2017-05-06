@@ -15,26 +15,23 @@ public:
     //The size of members.
     int GetSize();
 
-    // Get all lines and members from input file.
-    void GetAllLinesAndMembers
+    // Get all members and adjacent maps(multimap) from input file.
+    void GetAllMembersAndAdjacentMap
         (
         const string fileName,
-        unordered_map<int, pair<string, string>> &allLines,
         const string nameA,
         const string nameB,
         bool &directFriend
         );
-    // Get the direct firend map. multi_map.
-    void CalulateRelationMap(unordered_map<int, pair<string, string>> &allLines);
     // Find direct friends of given people and record the parent relation.
     void FindAdjacentNode
         (
-        const int input,                                          // I: number to serach
-        const unordered_map<int, bool> &visited,                  // I: cached visited value
-        unordered_set<int> &adjResult,                            // O: adjacent result
-        unordered_map<int, int> &parentRelation                   // O: record the parent
+        const string input,                                          // I: number to serach
+        const unordered_map<string, bool> &visited,                  // I: cached visited value
+        unordered_set<string> &adjResult,                            // O: adjacent result
+        unordered_map<string, string> &parentRelation                // O: record the parent
         ) const;
-    // BFS traverse until find the destination.
+    // BFS traverse until the destination is found.
     int GetMinDistanceWithBFS
         (
         const string inputA,                                // I: search original
@@ -43,7 +40,7 @@ public:
         ) const;
 
 private:
-    unordered_map<string, int> allMembers;
-    unordered_multimap<int, int> adjacentMap;
+    unordered_set<string> allMembers;
+    unordered_multimap<string, string> adjacentMap;
 };
 

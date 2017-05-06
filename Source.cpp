@@ -10,19 +10,17 @@ int main()
     const string fileName = "./SocialNetwork.txt";
     const string nameA = "MYLES_JEFFCOAT";
     const string nameB = "ARON_OHAIR";
-    unordered_map<int, pair<string, string>> allLines;
     bool directFriend = false;
 
     SocialNetworkGraph relationGraph;
-    relationGraph.GetAllLinesAndMembers(fileName, allLines, nameA, nameB, directFriend);
+    relationGraph.GetAllMembersAndAdjacentMap(fileName, nameA, nameB, directFriend);
     //If they are direct friend, just return the result.
     if (directFriend)
     {
         cout << "There are " << relationGraph.GetSize() << " peoples in this social network." << endl;
-        cout << "The distance between " << nameA << " and " << nameB << " is : " << 1 << endl;
+        cout << "The distance between " << nameA << " and " << nameB << " is 1, they are friends." << endl;
         return 0;
     }
-    relationGraph.CalulateRelationMap(allLines);
 
     vector<string> path;
     int distance = relationGraph.GetMinDistanceWithBFS(nameA, nameB, path);

@@ -1,7 +1,7 @@
 /*
 This is a social network graph class, stroring the member with number and adjacent map relation.
-The method is solve the mininum distance is:
-1. Traverse all lines in the file and build a map between people and number.
+The method to solve the mininum distance is:
+1. Traverse all lines in the file and store all peoples.
 2. Build a map of direct friend, this is a multimap.
 3. Use graph BFS algorithm to traverse all members until the destination is found. 
    Because the weight of every relation is one and no direction, the path should be the mininum.
@@ -18,9 +18,6 @@ if yes, the distance is one. If not, then call BFS.
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <vector>
-#include <queue>
-#include <unordered_set>
 
 SocialNetworkGraph::SocialNetworkGraph()
 {
@@ -58,14 +55,12 @@ bool SplitLineToNames(string &inputLine, vector<string> &names)
     }
 }
 
-// Get all lines and members.
-// Line: unordered_map<int, pair<string, string>>
+// Get members.
 // Memeber: unordered_map<string, int>
 // If input nameA and nameB are direct friend, set directFriedn as true.
-void SocialNetworkGraph::GetAllLinesAndMembers
+void SocialNetworkGraph::GetAllMembersAndAdjacentMap
 (
 const string fileName,
-unordered_map<int, pair<string, string>> &allLines,
 const string nameA,
 const string nameB,
 bool &directFriend
@@ -80,8 +75,6 @@ bool &directFriend
             string line;
             vector<string> names;
             names.reserve(2);
-            int iName = 0;
-            int iLine = 0;
             while (getline(inFile, line))
             {
                 if (SplitLineToNames(line, names))
@@ -90,17 +83,13 @@ bool &directFriend
                     {
                         directFriend = true;
                     }
-                    allLines.insert(std::make_pair(iLine, std::make_pair(names[0], names[1])));
-                    iLine++;
-                    if (allMembers.find(names[0]) == allMembers.end())
+                    allMembers.insert(names[0]);
+                    allMembers.insert(names[1]);
+                    // If the input are direct friends, no need to store the adjacent map, which is time consuming.
+                    if (!directFriend)
                     {
-                        allMembers.insert(std::make_pair(names[0], iName));
-                        iName++;
-                    }
-                    if (allMembers.find(names[1]) == allMembers.end())
-                    {
-                        allMembers.insert(std::make_pair(names[1], iName));
-                        iName++;
+                        adjacentMap.insert({ names[0], names[1] });
+                        adjacentMap.insert({ names[1], names[0] });
                     }
                 }
                 else
@@ -121,29 +110,13 @@ bool &directFriend
     inFile.close();
 }
 
-// Get the relation map of the social network. Stroed with multimap.
-void SocialNetworkGraph::CalulateRelationMap(unordered_map<int, pair<string, string>> &allLines)
-{
-    if (allLines.empty() || allMembers.empty())
-    {
-        return;
-    }
-    for (auto iter : allLines)
-    {
-        int numA = allMembers.find(iter.second.first)->second;
-        int numB = allMembers.find(iter.second.second)->second;
-        adjacentMap.insert(std::make_pair(numA, numB));
-        adjacentMap.insert(std::make_pair(numB, numA));
-    }
-}
-
 //Find direct friend relation of given name's number
 void SocialNetworkGraph::FindAdjacentNode
 (
-const int input,                                          // I: number to serach
-const unordered_map<int, bool> &visited,                  // I: cached visited value
-unordered_set<int> &adjResult,                            // O: adjacent result
-unordered_map<int, int> &parentRelation                   // O: record the parent
+const string input,                                          // I: number to serach
+const unordered_map<string, bool> &visited,                  // I: cached visited value
+unordered_set<string> &adjResult,                            // O: adjacent result
+unordered_map<string, string> &parentRelation                // O: record the parent
 ) const
 {
     auto iter = adjacentMap.equal_range(input);
@@ -158,14 +131,14 @@ unordered_map<int, int> &parentRelation                   // O: record the paren
 }
 
 // Find the path with parent relation.
-void FindPath(const int numA, const int numB, unordered_map<int, int> &parentRelation, vector<int> &path)
+void FindPath(const string nameA, const string nameB, unordered_map<string, string> &parentRelation, vector<string> &path)
 {
-    path.push_back(numB);
-    if (numB == numA || parentRelation.find(numB) == parentRelation.end())
+    path.push_back(nameB);
+    if (nameB == nameA || parentRelation.find(nameB) == parentRelation.end())
     {
         return;
     }
-    FindPath(numA, parentRelation[numB], parentRelation, path);
+    FindPath(nameA, parentRelation[nameB], parentRelation, path);
 }
 
 // Get the distance between two given values.
@@ -191,29 +164,27 @@ vector<string> &path                                // O: search path if found
         return 0;
     }
     //Cache the visited status
-    unordered_map<int, bool> visited;
+    unordered_map<string, bool> visited;
     for (auto iter : allMembers)
     {
-        visited.insert(std::make_pair(iter.second, false));
+        visited.insert(std::make_pair(iter, false));
     }
     // A ---->B
-    int numA = allMembers.find(inputA)->second;
-    int numB = allMembers.find(inputB)->second;
-    queue<int> searchQ;
-    unordered_map<int, int> parentRelation;
-    searchQ.push(numA);
-    visited[numA] = true;
+    queue<string> searchQ;
+    unordered_map<string, string> parentRelation;
+    searchQ.push(inputA);
+    visited[inputA] = true;
     bool found = false;
     while (!searchQ.empty())
     {
-        int searchNum = searchQ.front();
-        if (searchNum == numB)
+        string searchNum = searchQ.front();
+        if (searchNum == inputB)
         {
             break;
         }
         searchQ.pop();
 
-        unordered_set<int> adjSet;
+        unordered_set<string> adjSet;
         FindAdjacentNode(searchNum, visited, adjSet, parentRelation);
         for (auto iter : adjSet)
         {
@@ -221,17 +192,6 @@ vector<string> &path                                // O: search path if found
             visited[iter] = true;
         }
     }
-    vector<int> pathInt;
-    FindPath(numA, numB, parentRelation, pathInt);
-
-    unordered_map<int, string> reversedMembers;
-    for (auto iter : allMembers)
-    {
-        reversedMembers.insert(std::make_pair(iter.second, iter.first));
-    }
-    for (unsigned int ii = 0; ii < pathInt.size(); ii++)
-    {
-        path.push_back(reversedMembers.find(pathInt[ii])->second);
-    }
+    FindPath(inputA, inputB, parentRelation, path);
     return path.size() - 1;
 }
